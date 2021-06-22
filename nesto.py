@@ -5,29 +5,29 @@ import random
 from random import randrange
 pygame.font.init()
 
-width, height = 750, 750
+width, height = 850, 850
 win = pygame.display.set_mode((width, height))
-pygame.display.set_caption("Space INVADE")
+pygame.display.set_caption("Space Wars")
 
-#Images
-redShip = pygame.image.load("assets/pixel_ship_red_small.png")
-greenShip = pygame.image.load("assets/pixel_ship_green_small.png")
-blueShip = pygame.image.load("assets/pixel_ship_blue_small.png")
-
-
-yellowShip = pygame.image.load("assets/pixel_ship_yellow.png")
+#imgs
+redShip = pygame.image.load("assets/enemyRed.png")
+greenShip = pygame.image.load("assets/enemyGreen.png")
+blueShip = pygame.image.load("assets/enemyBlue.png")
 
 
-redLaser = pygame.image.load("assets/pixel_laser_red.png")
-greenLaser = pygame.image.load("assets/pixel_laser_green.png")
-blueLaser = pygame.image.load("assets/pixel_laser_blue.png")
-yellowLaser = pygame.image.load("assets/pixel_laser_yellow.png")
+playerShip = pygame.image.load("assets/shuttle.png")
 
 
-#Background
-back = pygame.transform.scale(pygame.image.load("assets/background-black.png"), (width, height))
+redLaser = pygame.image.load("assets/laserRed.png")
+greenLaser = pygame.image.load("assets/laserGreen.png")
+blueLaser = pygame.image.load("assets/laserBlue.png")
+yellowLaser = pygame.image.load("assets/laserYellow.png")
 
-class Laser():
+
+#background scaling image
+back = pygame.transform.scale(pygame.image.load("assets/spaceFelix.jpg"), (width, height))
+
+class Laser:
 	def __init__(self, x, y, img):
 		self.x = x
 		self.y = y
@@ -48,9 +48,10 @@ class Laser():
 		return collide(obj, self)	
 
 
-class Ship:
+class SpaceShip:
 
-	coolDown = 30
+	# how often can player shoot lasers
+	coolDown = 20
 
 	def __init__(self, x , y, health=100):
 		self.x = x
@@ -97,12 +98,14 @@ class Ship:
 		return self.ship_img.get_height()		
 
 
-class Player(Ship):
-	"""docstring for ClassName"""
+class Player(SpaceShip):
+	
 	def __init__(self, x, y, health=100):
 		super().__init__(x, y, health)
-		self.ship_img = yellowShip
+		self.ship_img = playerShip
 		self.laser_img = yellowLaser
+
+		#collision
 		self.mask = pygame.mask.from_surface(self.ship_img)	
 		self.max_health = health
 
@@ -128,7 +131,7 @@ class Player(Ship):
 		self.healthbar(win)
 
 
-class Enemy(Ship):
+class Enemy(SpaceShip):
 
 	color_map = {
 			"red": (redShip, redLaser),
@@ -146,7 +149,7 @@ class Enemy(Ship):
 
 	def shoot(self):
 		if self.cool_down_counter == 0:
-			laser = Laser(self.x - 20, self.y, self.laser_img)
+			laser = Laser(self.x + 15, self.y + 20, self.laser_img)
 			self.lasers.append(laser)
 			self.cool_down_counter = 1			
 
@@ -158,14 +161,15 @@ def collide(obj1, obj2):
 
 
 def main():
+
 	run = True
 
 	FPS = 60
 	level = 0
 	lives = 5
 
-	main_font = pygame.font.SysFont("comicsans", 50)
-	lost_font = pygame.font.SysFont("comicsans", 60)
+	mainFont = pygame.font.SysFont("sans-serif", 45)
+	lostFont = pygame.font.SysFont("comicsans", 70)
 
 	enemies = []
 	wave_len = 5
@@ -181,14 +185,16 @@ def main():
 	lost_count = 0
 
 	def redraw_window():
+
+		#background starting pos
 		win.blit(back, (0, 0))
 
-		#draw text
-		lives_label = main_font.render(f"Lives: {lives}", 1, (255,255,255))
-		level_label = main_font.render(f"Level: {level}", 1, (255,255,255))
+		
+		livesLab = mainFont.render(f"Lives: {lives}", 1, (255,255,0))
+		levelLab = mainFont.render(f"Level: {level}", 1, (255,0,0))
 
-		win.blit(lives_label, (10, 10))
-		win.blit(level_label, (width - level_label.get_width() - 10, 10))
+		win.blit(livesLab, (10, 10))
+		win.blit(levelLab, (10,45))
 
 		for enemy in enemies:
 			enemy.draw(win)
@@ -196,12 +202,13 @@ def main():
 		player.draw(win)	
 
 		if lost:
-			lost_label = lost_font.render("You LOST!!", 1, (255,255,255))
-			win.blit(lost_label, (width/2 - lost_label.get_width()/2, 350))
+			lostLabel = lostFont.render("YOU LOST!!", 1, (255,255,255))
+			win.blit(lostLabel, (width/2 - lost_label.get_width()/2, 350))
 
 		pygame.display.update()
 
 	while run:
+		
 		clock.tick(FPS)
 		redraw_window()
 
@@ -226,15 +233,15 @@ def main():
 			if e.type == pygame.QUIT:
 				quit()
 
-		# Movement			
+		# movement			
 		keys = pygame.key.get_pressed()
-		if keys[pygame.K_LEFT] and player.x - player_vel > 0: # left
+		if keys[pygame.K_LEFT] and player.x - player_vel > 0:
 			player.x -= player_vel	
-		if keys[pygame.K_RIGHT] and player.x + player_vel + player.get_width() < width: # right
+		if keys[pygame.K_RIGHT] and player.x + player_vel + player.get_width() < width: 
 			player.x += player_vel
-		if keys[pygame.K_DOWN] and player.y + player_vel + player.get_height() + 15 < height: # down
+		if keys[pygame.K_DOWN] and player.y + player_vel + player.get_height() + 15 < height: 
 			player.y += player_vel
-		if keys[pygame.K_UP] and player.y - player_vel > 0: # up	
+		if keys[pygame.K_UP] and player.y - player_vel > 0: 	
 			player.y -= player_vel
 		if keys[pygame.K_SPACE]:
 			player.shoot()
@@ -264,7 +271,7 @@ def main_menu():
 	run = True
 	while run:
 		win.blit(back, (0,0))
-		title_label = title_font.render("Press the mouse to begin...", 1, (255,255,255))
+		title_label = title_font.render("Mouse click for start ...", 1, (255,255,255))
 		win.blit(title_label, (width/2 - title_label.get_width()/2, 350))
 		pygame.display.update()
 
